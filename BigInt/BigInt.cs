@@ -2,7 +2,8 @@
 
 namespace BigInt;
 
-public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionOperators<BigInt, BigInt, BigInt>
+public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionOperators<BigInt, BigInt, BigInt>,
+                       IComparisonOperators<BigInt, BigInt, bool>
 {
     private bool _isPositive;
     private List<byte> _bytes;
@@ -147,4 +148,69 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         return new BigInt(true, newBytes);
     }
 
+    #region comparison operators
+    // not very readable code, needs comments or complete rewrite
+    public static bool operator >(BigInt left, BigInt right)
+    {
+        if (left._isPositive != right._isPositive)
+            return left._isPositive && !right._isPositive;
+
+        if (left._bytes.Count != right._bytes.Count)
+            return (left._bytes.Count > right._bytes.Count) == left._isPositive;
+
+        for (int i = left._bytes.Count - 1; i >= 0; i--)
+        {
+            if (left._bytes[i] != right._bytes[i])
+                return (left._bytes[i] > right._bytes[i]) == left._isPositive;
+        }
+
+        return false;
+    }
+
+    public static bool operator >=(BigInt left, BigInt right)
+    {
+        if (left._isPositive != right._isPositive)
+            return left._isPositive && !right._isPositive;
+
+        if (left._bytes.Count != right._bytes.Count)
+            return (left._bytes.Count > right._bytes.Count) == left._isPositive;
+
+        for (int i = left._bytes.Count - 1; i >= 0; i--)
+        {
+            if (left._bytes[i] != right._bytes[i])
+                return (left._bytes[i] > right._bytes[i]) == left._isPositive;
+        }
+
+        return true;
+    }
+
+    public static bool operator <(BigInt left, BigInt right)
+    {
+        return right > left;
+    }
+
+    public static bool operator <=(BigInt left, BigInt right)
+    {
+        return right >= left;
+    }
+
+    public static bool operator ==(BigInt left, BigInt right)
+    {
+        if (left._isPositive != right._isPositive || left._bytes.Count != right._bytes.Count)
+            return false;
+
+        for (int i = 0; i < left._bytes.Count; i++)
+        {
+            if (left._bytes[i] != right._bytes[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    public static bool operator !=(BigInt left, BigInt right)
+    {
+        return !(left == right);
+    }
+    #endregion
 }
