@@ -82,8 +82,6 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
 
     public static BigInt operator -(BigInt left, BigInt right)
     {
-        Console.WriteLine($"{left._isPositive} {right._isPositive}");
-
         // a - (-b) <=> a + b
         if (!right._isPositive)
             return left + new BigInt(true, right._bytes);
