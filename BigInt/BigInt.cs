@@ -202,4 +202,31 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
 
     public static bool operator !=(BigInt left, BigInt right) => !(left == right);
     #endregion
+
+    #region implicit operators
+    public static implicit operator BigInt(int value)
+    {
+        if (value == 0)
+            return new BigInt(true, [0]);
+
+        var sign = value > 0;
+        value = Math.Abs(value);
+
+        var bytes = new List<byte>();
+        var carry = value;
+        while (carry > 0)
+        {
+            var num = carry % 256;
+            carry /= 256;
+            bytes.Add((byte)num);
+        }
+
+        return new BigInt(sign, bytes);
+    }
+
+    private static BigInt FromIntegralType<T>(T value)
+    {
+
+    }
+    #endregion
 }
