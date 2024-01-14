@@ -146,8 +146,8 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         return new BigInt(true, newBytes);
     }
 
+    // not very readable code, refactoring is needed
     #region comparison operators
-    // not very readable code, needs comments or complete rewrite
     public static bool operator >(BigInt left, BigInt right)
     {
         if (left._isPositive != right._isPositive)
