@@ -182,15 +182,9 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         return true;
     }
 
-    public static bool operator <(BigInt left, BigInt right)
-    {
-        return right > left;
-    }
+    public static bool operator <(BigInt left, BigInt right) => right > left;
 
-    public static bool operator <=(BigInt left, BigInt right)
-    {
-        return right >= left;
-    }
+    public static bool operator <=(BigInt left, BigInt right) => right >= left;
 
     public static bool operator ==(BigInt left, BigInt right)
     {
@@ -206,9 +200,6 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         return true;
     }
 
-    public static bool operator !=(BigInt left, BigInt right)
-    {
-        return !(left == right);
-    }
+    public static bool operator !=(BigInt left, BigInt right) => !(left == right);
     #endregion
 }
