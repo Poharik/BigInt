@@ -223,10 +223,5 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
 
         return new BigInt(sign, bytes);
     }
-
-    private static BigInt FromIntegralType<T>(T value)
-    {
-
-    }
     #endregion
 }
