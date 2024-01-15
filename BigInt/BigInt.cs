@@ -3,13 +3,12 @@
 namespace BigInt;
 
 public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionOperators<BigInt, BigInt, BigInt>,
-                       IComparisonOperators<BigInt, BigInt, bool>
+                       IMultiplyOperators<BigInt, BigInt, BigInt>, IComparisonOperators<BigInt, BigInt, bool>
 {
     private bool _isPositive;
     private List<byte> _bytes;
 
     /// <summary>
-    /// Constructor
     /// </summary>
     /// <param name="isPositive"></param>
     /// <param name="bytes">List of bytes representing the number in little-endian order</param>
@@ -19,6 +18,7 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         _bytes = bytes;
     }
 
+    #region arithmetic operators
     public static BigInt operator +(BigInt left, BigInt right)
     {
         // if signs are not matching, it's subtraction
@@ -145,6 +145,65 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
 
         return new BigInt(true, newBytes);
     }
+    
+    // not very efficient algorithm, needs to be rewritten
+    public static BigInt operator *(BigInt left, BigInt right)
+    {
+        // return 0 if one of numbers is 0
+        if (left == 0 || right == 0)
+            return new BigInt(true, [0]);
+
+        // if one of the numbers is 1, return the other one
+        // bytes need to be copied
+        if (left == 1)
+        {
+            byte[] bytesClone = new byte[right._bytes.Count];
+            right._bytes.CopyTo(bytesClone);
+            return new BigInt(left._isPositive, [.. bytesClone]);
+        }
+
+        if (right == 1)
+        {
+            byte[] bytesClone = new byte[left._bytes.Count];
+            left._bytes.CopyTo(bytesClone);
+            return new BigInt(left._isPositive, [.. bytesClone]);
+        }
+
+        // long multiplication
+        var result = new BigInt(true, [0]);
+        for (int i = 0; i < left._bytes.Count; i++)
+        {
+            // create trailing 0s
+            var bytes = Enumerable.Repeat((byte)0, i).ToList();
+
+            // calculate partial result of multiplication
+            var carry = 0;
+            for (int j = 0; j < right._bytes.Count; j++)
+            {
+                var multResult = left._bytes[i] * right._bytes[j] + carry;
+
+                if (multResult > 255)
+                {
+                    carry = multResult / 256;
+                    multResult %= 256;
+                }
+                else
+                    carry = 0;
+
+                bytes.Add((byte)multResult);
+            }
+
+            if (carry != 0)
+                bytes.Add((byte)carry);
+
+            result += new BigInt(true, bytes);
+        }
+
+        // determine sign
+        result._isPositive = left._isPositive == right._isPositive;
+        return result;
+    }
+    #endregion
 
     // not very readable code, refactoring is needed
     #region comparison operators
@@ -209,9 +268,11 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         if (value == 0)
             return new BigInt(true, [0]);
 
+        // determine the sign
         var sign = value > 0;
         value = Math.Abs(value);
 
+        // fill list of bytes
         var bytes = new List<byte>();
         var carry = value;
         while (carry > 0)
