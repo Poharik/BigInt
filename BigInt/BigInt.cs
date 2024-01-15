@@ -3,7 +3,8 @@
 namespace BigInt;
 
 public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionOperators<BigInt, BigInt, BigInt>,
-                       IMultiplyOperators<BigInt, BigInt, BigInt>, IComparisonOperators<BigInt, BigInt, bool>
+                       IMultiplyOperators<BigInt, BigInt, BigInt>, IComparisonOperators<BigInt, BigInt, bool>,
+                       IShiftOperators<BigInt, int, BigInt>
 {
     private bool _isPositive;
     private List<byte> _bytes;
@@ -203,6 +204,77 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         // determine sign
         result._isPositive = left._isPositive == right._isPositive;
         return result;
+    }
+    #endregion
+
+    #region shift operators
+        public static BigInt operator <<(BigInt value, int shiftAmount)
+    {
+        var wholeBytes = shiftAmount / 8;
+        var bits = shiftAmount % 8;
+
+        // add 0 for each 8b
+        var newBytes = Enumerable.Repeat((byte)0, wholeBytes).ToList();
+
+        // if shiftAmount is multiple of 8, no additional computation is needed
+        if (bits == 0)
+        {
+            newBytes.AddRange(value._bytes);
+            return new BigInt(value._isPositive, newBytes);
+        }
+
+        var carry = 0;
+        for (int i = 0; i < value._bytes.Count; i++)
+        {
+            // shift the bits and add bits from previous byte
+            var newByte = (value._bytes[i] << bits) + carry;
+            newBytes.Add((byte)newByte);
+
+            // calculate bits to carry over to next byte
+            carry = value._bytes[i] >> (8 - bits);
+        }
+
+        if (carry != 0)
+            newBytes.Add((byte)carry);
+
+        return new BigInt(value._isPositive, newBytes);
+    }
+
+    public static BigInt operator >>(BigInt value, int shiftAmount)
+    {
+        var wholeBytes = shiftAmount / 8;
+        var bits = shiftAmount % 8;
+
+        // if shiftAmount is multiple of 8, no additional computation is needed
+        if (bits == 0)
+        {
+            // copy only needed bytes
+            var bytesClone = new byte[value._bytes.Count - wholeBytes];
+            value._bytes.CopyTo(wholeBytes, bytesClone, 0, bytesClone.Length);
+            return new BigInt(value._isPositive, [.. bytesClone]);
+        }
+        
+        var newBytes = new List<byte>();
+        var carry = 0;
+        // first bytes are ignored - they all disappear after the shift
+        for (int i = value._bytes.Count - 1; i >= wholeBytes; i--)
+        {
+            // shift the bits and add bits from previous byte
+            var newByte = (value._bytes[i] >> bits) + carry;
+            newBytes.Add((byte)newByte);
+
+            // calculate bits to carry over to next byte
+            carry = value._bytes[i] << (8 - bits);
+        }
+
+        // the list needs to be reversed
+        newBytes.Reverse();
+        return new BigInt(value._isPositive, newBytes);
+    }
+
+    public static BigInt operator >>>(BigInt value, int shiftAmount)
+    {
+        throw new NotImplementedException();
     }
     #endregion
 
