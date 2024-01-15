@@ -8,6 +8,7 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
     private bool _isPositive;
     private List<byte> _bytes;
 
+    public BigInt() : this(true, [0]) {}
     /// <summary>
     /// </summary>
     /// <param name="isPositive"></param>
