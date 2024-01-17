@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace BigInt;
 
@@ -341,6 +341,9 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         if (value == 0)
             return new BigInt(true, [0]);
 
+        // absolute value of -2147483648 is 2147483648, which is outside of range of int
+        if (value == int.MinValue)
+            return (BigInt)(long)value;
         // determine the sign
         var sign = value > 0;
         value = Math.Abs(value);
