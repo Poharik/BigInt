@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace BigInt;
 
@@ -344,6 +344,7 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         // absolute value of -2147483648 is 2147483648, which is outside of range of int
         if (value == int.MinValue)
             return (BigInt)(long)value;
+
         // determine the sign
         var sign = value > 0;
         value = Math.Abs(value);
@@ -360,5 +361,32 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
 
         return new BigInt(sign, bytes);
     }
+
+    public static implicit operator BigInt(long value)
+    {
+        if (value == 0)
+            return new BigInt(true, [0]);
+
+        // same sa int, but cast to ulong
+        if (value == long.MinValue)
+            throw new ArgumentOutOfRangeException();
+
+        // determine the sign
+        var sign = value > 0;
+        value = Math.Abs(value);
+
+        // fill list of bytes
+        var bytes = new List<byte>();
+        var carry = value;
+        while (carry > 0)
+        {
+            var num = carry % 256;
+            carry /= 256;
+            bytes.Add((byte)num);
+        }
+
+        return new BigInt(sign, bytes);
+    }
+    
     #endregion
 }
