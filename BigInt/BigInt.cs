@@ -4,7 +4,8 @@ namespace BigInt;
 
 public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionOperators<BigInt, BigInt, BigInt>,
                        IMultiplyOperators<BigInt, BigInt, BigInt>, IDivisionOperators<BigInt, BigInt, BigInt>,
-                       IComparisonOperators<BigInt, BigInt, bool>, IShiftOperators<BigInt, int, BigInt>
+                       IComparisonOperators<BigInt, BigInt, bool>, IShiftOperators<BigInt, int, BigInt>,
+                       IBitwiseOperators<BigInt, BigInt, BigInt>
 {
     private bool _isPositive;
     private List<byte> _bytes;
@@ -423,6 +424,79 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         }
 
         return new BigInt(sign, bytes);
+    }
+    #endregion
+
+    #region bitwise operators
+    // all of these operators may not work as one could expect as the negative numbers are not repesented in 2's complement
+    // this needs to be retought because the behaviour is strange
+    public static BigInt operator &(BigInt left, BigInt right)
+    {
+        // to make the implementation easier, let left be number with less bytes
+        if (left._bytes.Count > right._bytes.Count)
+            (left, right) = (right, left);
+
+        // perform the actual bitwise and
+        var newBytes = new List<byte>();
+        for (int i = 0; i < left._bytes.Count; i++)
+            newBytes.Add((byte)(left._bytes[i] & right._bytes[i]));
+
+        // remove all unnecessary 0
+        var lastNonZeroIndex = newBytes.FindLastIndex(x => x!= 0);
+        newBytes = newBytes[..(lastNonZeroIndex + 1)];
+
+        // if there were only 0s, add new one
+        if (newBytes.Count == 0)
+            newBytes = [0];
+
+        // the sign is determined by anding their signs
+        return new BigInt(left._isPositive & right._isPositive, newBytes);
+    }
+
+    public static BigInt operator |(BigInt left, BigInt right)
+    {
+        // to make the implementation easier, let left be number with less bytes
+        if (left._bytes.Count > right._bytes.Count)
+            (left, right) = (right, left);
+
+        // perform the actual bitwise and
+        var newBytes = new List<byte>();
+        for (int i = 0; i < left._bytes.Count; i++)
+            newBytes.Add((byte)(left._bytes[i] | right._bytes[i]));
+
+        // append rest of the bytes
+        newBytes.AddRange(right._bytes[left._bytes.Count..]);
+
+        // the sign is determined by oring their signs
+        return new BigInt(left._isPositive | right._isPositive, newBytes);
+    }
+
+    public static BigInt operator ^(BigInt left, BigInt right)
+    {
+        // to make the implementation easier, let left be number with less bytes
+        if (left._bytes.Count > right._bytes.Count)
+            (left, right) = (right, left);
+
+        // perform the actual bitwise and
+        var newBytes = new List<byte>();
+        for (int i = 0; i < left._bytes.Count; i++)
+            newBytes.Add((byte)(left._bytes[i] ^ right._bytes[i]));
+
+        // append rest of the bytes
+        newBytes.AddRange(right._bytes[left._bytes.Count..]);
+
+        return new BigInt(true, newBytes);
+    }
+
+    public static BigInt operator ~(BigInt value)
+    {
+        // invert all bits
+        var newBytes = new List<byte>();
+        for (int i = 0; i < value._bytes.Count; i++)
+            newBytes.Add((byte)(~value._bytes[i]));
+
+        // invert the sign as well
+        return new BigInt(!value._isPositive, newBytes);
     }
     #endregion
 }
