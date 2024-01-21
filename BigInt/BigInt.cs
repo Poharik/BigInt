@@ -3,8 +3,8 @@
 namespace BigInt;
 
 public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionOperators<BigInt, BigInt, BigInt>,
-                       IMultiplyOperators<BigInt, BigInt, BigInt>, IComparisonOperators<BigInt, BigInt, bool>,
-                       IShiftOperators<BigInt, int, BigInt>
+                       IMultiplyOperators<BigInt, BigInt, BigInt>, IDivisionOperators<BigInt, BigInt, BigInt>,
+                       IComparisonOperators<BigInt, BigInt, bool>, IShiftOperators<BigInt, int, BigInt>
 {
     private bool _isPositive;
     private List<byte> _bytes;
@@ -205,10 +205,46 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         result._isPositive = left._isPositive == right._isPositive;
         return result;
     }
+    
+    public static BigInt operator /(BigInt left, BigInt right)
+    {
+        // check if the left num is less than the right one
+        if (left < right)
+            return new BigInt(true, [0]);
+
+        // check if the numbers are equal
+        if (left == right)
+            return new BigInt(true, [1]);
+
+        var rem = new BigInt(true, [0]);
+        for (int i = 0; i < left._bytes.Count * 8; i++)
+        {
+            // make space for high order bit of left num and add the bit
+            rem <<= 1;
+            rem += left._bytes.Last() >> 7;
+
+            // remove the high order bit and shift
+            left._bytes[^1] &= 0b0111_1111;
+            left <<= 1;
+
+            var temp = rem - right;
+            if (temp >= 0)
+            {
+                rem = temp;
+                left._bytes[0] |= 0b0000_0001;
+            }
+        }
+
+        // remove all unnecessary 0
+        var lastNonZeroIndex = left._bytes.FindLastIndex(x => x!= 0);
+        left._bytes = left._bytes[..(lastNonZeroIndex + 1)];
+        
+        return left;
+    }
     #endregion
 
     #region shift operators
-        public static BigInt operator <<(BigInt value, int shiftAmount)
+    public static BigInt operator <<(BigInt value, int shiftAmount)
     {
         var wholeBytes = shiftAmount / 8;
         var bits = shiftAmount % 8;
@@ -336,6 +372,7 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
     #endregion
 
     #region implicit operators
+    // casts from int and long are basically the same, generic method would help
     public static implicit operator BigInt(int value)
     {
         if (value == 0)
@@ -387,6 +424,5 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
 
         return new BigInt(sign, bytes);
     }
-    
     #endregion
 }
