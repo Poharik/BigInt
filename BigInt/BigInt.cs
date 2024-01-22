@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace BigInt;
 
@@ -209,18 +209,24 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
     
     public static BigInt operator /(BigInt left, BigInt right)
     {
+        // determine sign of the result
+        var resultSign = left._isPositive == right._isPositive;
+        // bot signs can now be set to +
+        left._isPositive = true;
+        right._isPositive = true;
+
         // check if the left num is less than the right one
         if (left < right)
-            return new BigInt(true, [0]);
+            return new BigInt(resultSign, [0]);
 
         // check if the numbers are equal
         if (left == right)
-            return new BigInt(true, [1]);
+            return new BigInt(resultSign, [1]);
 
         var rem = new BigInt(true, [0]);
         for (int i = 0; i < left._bytes.Count * 8; i++)
         {
-            // make space for high order bit of left num and add the bit
+            // append high order bit of left number to rem
             rem <<= 1;
             rem += left._bytes.Last() >> 7;
 
@@ -239,6 +245,8 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         // remove all unnecessary 0
         var lastNonZeroIndex = left._bytes.FindLastIndex(x => x!= 0);
         left._bytes = left._bytes[..(lastNonZeroIndex + 1)];
+
+        left._isPositive = resultSign;
         
         return left;
     }
