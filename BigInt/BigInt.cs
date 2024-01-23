@@ -1,11 +1,11 @@
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace BigInt;
 
 public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionOperators<BigInt, BigInt, BigInt>,
                        IMultiplyOperators<BigInt, BigInt, BigInt>, IDivisionOperators<BigInt, BigInt, BigInt>,
-                       IComparisonOperators<BigInt, BigInt, bool>, IShiftOperators<BigInt, int, BigInt>,
-                       IBitwiseOperators<BigInt, BigInt, BigInt>
+                       IModulusOperators<BigInt, BigInt, BigInt>, IComparisonOperators<BigInt, BigInt, bool>, 
+                       IShiftOperators<BigInt, int, BigInt>, IBitwiseOperators<BigInt, BigInt, BigInt>
 {
     private bool _isPositive;
     private List<byte> _bytes;
@@ -207,21 +207,27 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         return result;
     }
     
-    public static BigInt operator /(BigInt left, BigInt right)
+    public static BigInt operator /(BigInt left, BigInt right) => BigInt.DivRem(left, right).Quotient;
+    
+    public static BigInt operator %(BigInt left, BigInt right) => BigInt.DivRem(left, right).Remainder;
+
+    public static (BigInt Quotient, BigInt Remainder) DivRem(BigInt left, BigInt right)
     {
         // determine sign of the result
         var resultSign = left._isPositive == right._isPositive;
+        var remSign = left._isPositive;
+
         // bot signs can now be set to +
         left._isPositive = true;
         right._isPositive = true;
 
         // check if the left num is less than the right one
         if (left < right)
-            return new BigInt(resultSign, [0]);
+            return (new BigInt(true, [0]), left);
 
         // check if the numbers are equal
         if (left == right)
-            return new BigInt(resultSign, [1]);
+            return (new BigInt(resultSign, [1]), new BigInt(true, [0]));
 
         var rem = new BigInt(true, [0]);
         for (int i = 0; i < left._bytes.Count * 8; i++)
@@ -247,8 +253,9 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         left._bytes = left._bytes[..(lastNonZeroIndex + 1)];
 
         left._isPositive = resultSign;
-        
-        return left;
+        rem._isPositive = remSign;
+
+        return (left, rem);
     }
     #endregion
 
