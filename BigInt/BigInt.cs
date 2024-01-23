@@ -514,4 +514,40 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         return new BigInt(!value._isPositive, newBytes);
     }
     #endregion
+
+    #region parsing
+    public static BigInt Parse(string s)
+    {
+        if (BigInt.TryParse(s, out BigInt result))
+            return result;
+
+        throw new FormatException($"The input string '{s}' was not in a correct format.");
+    }
+
+    public static bool TryParse(string? s, out BigInt result)
+    {
+        s = s.TrimStart('+');
+
+        // determine the sign
+        bool isPositive = true;
+        if (s[0] == '-')
+        {
+            isPositive = false;
+            s = s[1..];
+        }
+
+        // construct the result BigInt
+        result = new BigInt();
+        foreach (var c in s)
+        {
+            if (!char.IsNumber(c))
+                return false;
+
+            result = 10 * result + (c - '0');
+        }
+
+        result._isPositive = isPositive;
+        return true;
+    }
+    #endregion
 }
