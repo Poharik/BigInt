@@ -4,7 +4,8 @@ namespace BigInt;
 
 public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionOperators<BigInt, BigInt, BigInt>,
                        IMultiplyOperators<BigInt, BigInt, BigInt>, IDivisionOperators<BigInt, BigInt, BigInt>,
-                       IModulusOperators<BigInt, BigInt, BigInt>, IComparisonOperators<BigInt, BigInt, bool>, 
+                       IModulusOperators<BigInt, BigInt, BigInt>, IIncrementOperators<BigInt>, IDecrementOperators<BigInt>,
+                       IComparisonOperators<BigInt, BigInt, bool>,
                        IShiftOperators<BigInt, int, BigInt>, IBitwiseOperators<BigInt, BigInt, BigInt>
 {
     private bool _isPositive;
@@ -257,6 +258,10 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
 
         return (left, rem);
     }
+    
+    public static BigInt operator ++(BigInt value) => value + 1;
+
+    public static BigInt operator --(BigInt value) => value - 1;
     #endregion
 
     #region shift operators
@@ -513,6 +518,7 @@ public struct BigInt : IAdditionOperators<BigInt, BigInt, BigInt>, ISubtractionO
         // invert the sign as well
         return new BigInt(!value._isPositive, newBytes);
     }
+
     #endregion
 
     #region parsing
